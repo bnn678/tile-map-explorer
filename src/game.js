@@ -1,5 +1,29 @@
 import Input from './input';
 
+// IDEA: add "window.onload" to game
+
+/**
+
+tilemap.load(tilemapData, {
+  onload: function() {
+    tilemap.render(screenCtx);
+    //renderPlayer();
+  }
+});
+
+/ Helper function to check for non-existent or solid tiles
+function isPassible(x, y) {
+  var data = tilemap.tileAt(x, y, 0);
+  // if the tile is out-of-bounds for the tilemap, then
+  // data will be undefined, a "falsy" value, and the
+  // && operator will shortcut to false.
+  // Otherwise, it is truthy, so the solid property
+  // of the tile will determine the result
+  return data && !data.solid
+}
+
+**/
+
 /** @class Game
   * A class representing the high-level functionality
   * of a game - the game loop, buffer swapping, etc.
@@ -11,6 +35,12 @@ export default class Game {
     * @param {integer} heght - the height of the game screen in pixels
     */
   constructor(width, height) {
+    var tilemap = require('./map.js');
+    var tilemapData = require('./map.json');
+
+    console.log(tilemap);
+    console.log(tilemapData);
+
     this._start = null;
     this.WIDTH = width;
     this.HEIGHT = height;
@@ -61,6 +91,7 @@ export default class Game {
     this.backBufferCtx.fillRect(0,0,this.WIDTH, this.HEIGHT);
 
     // TODO: Render game
+    //tilemap.render(this.screenBuffer);
 
     // Render entities
     this.entities.forEach(entity => entity.render(elapsedTime, this.backBufferCtx));
