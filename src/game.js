@@ -1,28 +1,5 @@
 import Input from './input';
-
-// IDEA: add "window.onload" to game
-
-/**
-
-tilemap.load(tilemapData, {
-  onload: function() {
-    tilemap.render(screenCtx);
-    //renderPlayer();
-  }
-});
-
-/ Helper function to check for non-existent or solid tiles
-function isPassible(x, y) {
-  var data = tilemap.tileAt(x, y, 0);
-  // if the tile is out-of-bounds for the tilemap, then
-  // data will be undefined, a "falsy" value, and the
-  // && operator will shortcut to false.
-  // Otherwise, it is truthy, so the solid property
-  // of the tile will determine the result
-  return data && !data.solid
-}
-
-**/
+import StartScreen from './start-screen';
 
 /** @class Game
   * A class representing the high-level functionality
@@ -35,15 +12,12 @@ export default class Game {
     * @param {integer} heght - the height of the game screen in pixels
     */
   constructor(width, height) {
-    var tilemap = require('./map.js');
-    var tilemapData = require('./map.json');
-
-    console.log(tilemap);
-    console.log(tilemapData);
-
     this._start = null;
     this.WIDTH = width;
     this.HEIGHT = height;
+    this.GRID_WIDTH = Math.floor(width / 32);
+    this.GRID_HEIGHT = Math.floor(height / 32);
+
     this.input = new Input();
     this.entities = [];
 
@@ -59,6 +33,26 @@ export default class Game {
     this.screenBuffer.height = this.HEIGHT;
     this.screenBufferCtx = this.screenBuffer.getContext('2d');
     document.body.append(this.screenBuffer);
+
+    // Set up the game state stack
+    this.gameState = []
+    this.gameState.push(new StartScreen());
+  }
+  /** @method pushGameState
+      * Pushes the provided game state to the
+      * state stack.
+      * @param {GameState} gameState - an object that
+      * implements an update() and render() method.
+      */
+  pushGameState(gameState) {
+    this.gameState.push(gameState);
+  }
+  /** @method popGameState
+    * Pops the current game state from the state stack.
+    * @return {GameState} the popped game state object
+    */
+  popGameState() {
+    return this.gameState.pop();
   }
   /** @method addEntity
     * Adds an entity to the game world
@@ -74,11 +68,10 @@ export default class Game {
     * @param {integer} elapsedTime - the number of milliseconds per frame
     */
   update(elapsedTime) {
+    // Update the active game state
+    this.gameState[this.gameState.length - 1].update(elapsedTime, this.input, this);
 
-    // Update game entitites
-    this.entities.forEach(entity => entity.update(elapsedTime, this.input));
-
-    // Swap input buffers
+    // Update the input object
     this.input.update();
   }
   /** @method render
@@ -87,14 +80,11 @@ export default class Game {
     */
   render(elapsedTime) {
     // Clear the back buffer
-    this.backBufferCtx.fillStyle = "white";
+    this.backBufferCtx.fillStyle = "#000";
     this.backBufferCtx.fillRect(0,0,this.WIDTH, this.HEIGHT);
 
-    // TODO: Render game
-    //tilemap.render(this.screenBuffer);
-
-    // Render entities
-    this.entities.forEach(entity => entity.render(elapsedTime, this.backBufferCtx));
+    // Render the game state
+    this.gameState[this.gameState.length - 1].render(elapsedTime, this.backBufferCtx, this);
 
     // Flip the back buffer
     this.screenBufferCtx.drawImage(this.backBuffer, 0, 0);
